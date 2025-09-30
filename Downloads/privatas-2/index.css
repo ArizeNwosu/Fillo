@@ -1,0 +1,182 @@
+:root {
+    /* Font Size Variables */
+    --font-size: 16px;
+    --line-height: 1.6;
+
+    /* Default Theme: Eclipse */
+    --background: #191d1f;
+    --surface-1: #2a2e30;
+    --surface-2: #3a3e40;
+    --surface-border: #3a3e40;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --accent: #8e825b;
+    --accent-hover: #a39665;
+    --accent-text: #e2e8f0;
+    --danger: #991b1b;
+    --danger-hover: #b91c1c;
+}
+:root[data-theme='starlight'] {
+    --background: #0f172a;
+    --surface-1: #1e293b;
+    --surface-2: #334155;
+    --surface-border: #334155;
+    --text-primary: #e2e8f0; /* Softer white */
+    --text-secondary: #94a3b8;
+    --accent: #0ea5e9;
+    --accent-hover: #38bdf8;
+    --accent-text: #ffffff;
+    --danger: #991b1b;
+    --danger-hover: #b91c1c;
+}
+
+/* Font Size Settings */
+html[data-font-size='sm'] { --font-size: 14px; }
+html[data-font-size='md'] { --font-size: 16px; }
+html[data-font-size='lg'] { --font-size: 18px; }
+
+html, body, #root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    min-height: 100vh; /* Ensure body takes full height for landing page */
+}
+
+body {
+    background-color: var(--background);
+    color: var(--text-primary);
+    font-size: var(--font-size);
+    line-height: var(--line-height);
+    font-family: 'Inter', sans-serif;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background-color: var(--surface-2);
+    border-radius: 5px;
+    border: 2px solid var(--background);
+    background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--accent);
+}
+
+/* For Firefox */
+.chat-scroll-area, .custom-scrollbar, textarea {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--surface-1);
+}
+
+.animated-background {
+    background: linear-gradient(-45deg, #101416, #1b1f21, #262a2c, #14181a);
+    background-size: 400% 400%;
+    animation: gradient 25s ease infinite;
+}
+
+:root[data-theme='starlight'] .animated-background {
+     background: linear-gradient(-45deg, #0b1120, #141d31, #1e293b, #0c1221);
+     background-size: 400% 400%;
+     animation: gradient 25s ease infinite;
+}
+
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.floating-icon {
+    animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+/* --- Interface Density --- */
+/* These classes are used to apply density settings from JS */
+
+/* Chat Messages */
+.chat-message-spacing > * + * {
+    margin-top: 1rem; /* comfortable, space-y-4 */
+}
+html[data-density='compact'] .chat-message-spacing > * + * {
+    margin-top: 0.5rem; /* compact, space-y-2 */
+}
+
+/* Module Sidebar */
+.module-sidebar-button {
+    height: 5rem; /* h-20 */
+    padding: 0.5rem; /* p-2 */
+}
+html[data-density='compact'] .module-sidebar-button {
+    height: 4.5rem; /* ~h-18 */
+    padding: 0.25rem; /* p-1 */
+}
+
+/* Sanitization History */
+.history-list > * + * {
+    margin-top: 0.5rem; /* space-y-2 */
+}
+html[data-density='compact'] .history-list > * + * {
+    margin-top: 0.25rem; /* space-y-1 */
+}
+.history-item {
+    padding: 0.5rem; /* p-2 */
+}
+html[data-density='compact'] .history-item {
+    padding: 0.375rem; /* p-1.5 */
+}
+
+/* Hide default search input clear button */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance:none;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+    .lg\:relative {
+        position: fixed !important;
+    }
+    .lg\:translate-x-0 {
+        transform: translateX(-100%);
+    }
+    .lg\:w-\[450px\] {
+        width: 80vw;
+        max-width: 400px;
+    }
+}
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 30;
+}

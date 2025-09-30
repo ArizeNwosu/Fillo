@@ -1,0 +1,7 @@
+{
+  "name": "Privatas 2",
+  "description": "A privacy-focused AI dashboard for high-net-worth individuals, featuring specialized modules and automatic PII sanitization.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
