@@ -20,6 +20,7 @@ def _fill_field_value(field_obj: pikepdf.Dictionary, field_def: FieldDefinition,
         return
 
     field_type = field_def.type
+    print(f"[DEBUG] _fill_field_value: field_id={field_def.id}, type={field_type}, value={value}")
 
     if field_type in {"text", "date", "number", "phone", "ssn"}:
         # Text fields: set /V (value) as string
@@ -27,8 +28,10 @@ def _fill_field_value(field_obj: pikepdf.Dictionary, field_def: FieldDefinition,
         # Also set /AP (appearance) to None to force PDF viewer to regenerate appearance
         if "/AP" in field_obj:
             del field_obj["/AP"]
+        print(f"[DEBUG] Set text field /V = {str(value)}")
 
     elif field_type in {"checkbox", "radio"}:
+        print(f"[DEBUG] Processing checkbox/radio field")
         # Checkbox/radio: set /V to /Yes or /Off
         truthy = str(value).lower() in {"true", "1", "yes", "on"}
         truthy = truthy or value is True
@@ -66,6 +69,7 @@ def _find_field_by_id(pdf: pikepdf.Pdf, field_id: str) -> pikepdf.Dictionary | N
     Searches through /AcroForm/Fields and page annotations.
 
     Handles field IDs that may have prefixes like "f_1001" vs PDF field names like "1001"
+    Also handles radio buttons with names like "1020 Radio Button 1"
     """
     # Strip common prefixes to match PDF field names
     # Field IDs might be "f_1001" but PDF has "1001"
@@ -79,11 +83,17 @@ def _find_field_by_id(pdf: pikepdf.Pdf, field_id: str) -> pikepdf.Dictionary | N
                 # Check if field name matches (field ID is often the /T name)
                 if "/T" in field_obj:
                     field_name = str(field_obj["/T"])
-                    # Try exact match, stripped match, or suffix match
+                    # Try multiple matching strategies:
+                    # 1. Exact match
+                    # 2. Stripped match
+                    # 3. Suffix match (e.g., "parent_1001" matches "1001")
+                    # 4. Prefix match (e.g., "1020" matches "1020 Radio Button 1")
                     if (field_name == field_id or
                         field_name == field_id_stripped or
                         field_name.endswith(f"_{field_id}") or
-                        field_name.endswith(f"_{field_id_stripped}")):
+                        field_name.endswith(f"_{field_id_stripped}") or
+                        field_name.startswith(f"{field_id} ") or
+                        field_name.startswith(f"{field_id_stripped} ")):
                         return field_obj
 
     # Also check page annotations directly
@@ -94,11 +104,13 @@ def _find_field_by_id(pdf: pikepdf.Pdf, field_id: str) -> pikepdf.Dictionary | N
                 if isinstance(annot_obj, pikepdf.Dictionary):
                     if "/T" in annot_obj:
                         field_name = str(annot_obj["/T"])
-                        # Try exact match, stripped match, or suffix match
+                        # Try exact match, stripped match, suffix match, or prefix match
                         if (field_name == field_id or
                             field_name == field_id_stripped or
                             field_name.endswith(f"_{field_id}") or
-                            field_name.endswith(f"_{field_id_stripped}")):
+                            field_name.endswith(f"_{field_id_stripped}") or
+                            field_name.startswith(f"{field_id} ") or
+                            field_name.startswith(f"{field_id_stripped} ")):
                             return annot_obj
 
     print(f"[DEBUG] Failed to find field {field_id} (stripped: {field_id_stripped}), listing all PDF field names...")

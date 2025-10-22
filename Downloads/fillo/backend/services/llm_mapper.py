@@ -71,6 +71,8 @@ class LlmMapper:
         }
         if not isinstance(unmatched, list):
             unmatched = []
+
+        print(f"[DEBUG] LLM returned fields: {list(applied.keys())}")
         return applied, [str(item) for item in unmatched]
 
 
