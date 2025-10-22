@@ -23,12 +23,22 @@ def _draw_checkbox(c: canvas.Canvas, field: FieldDefinition, value: Any, page_he
 
     if truthy:
         x1, y1, x2, y2 = field.rect
-        # Convert PDF coordinates (bottom-left origin) to ReportLab coordinates
-        pdf_y = page_height - y2  # Use y2 (top of field) and flip it
+        # PDF coordinates: (0,0) is bottom-left, y increases upward
+        # ReportLab Canvas: (0,0) is bottom-left, y increases upward (same!)
+        # So we need to use y1 (bottom of field box) directly
 
-        # Draw an X in the checkbox
-        c.setFont("ZapfDingbats", 12)
-        c.drawString(x1 + 2, pdf_y + 2, "4")  # "4" in ZapfDingbats is a checkmark
+        # Calculate center of checkbox for better positioning
+        box_width = x2 - x1
+        box_height = y2 - y1
+        center_x = x1 + (box_width / 2)
+        center_y = y1 + (box_height / 2)
+
+        # Draw checkmark using ZapfDingbats font
+        # Character "4" (✓), "8" (✗), or "3" (✓ bold)
+        font_size = min(box_height * 0.8, 12)  # Scale to checkbox size, max 12pt
+        c.setFont("ZapfDingbats", font_size)
+        # Center the checkmark (offset by ~1/3 of font size for proper centering)
+        c.drawString(center_x - (font_size / 3), center_y - (font_size / 3), "4")
 
 
 def _generate_checkbox_overlay(schema: FormSchema, current_values: dict[str, Any], orig_reader: PdfReader) -> BytesIO:
@@ -94,7 +104,11 @@ def _write_pdf_sync_hybrid(
             continue
 
         # Strip prefix and find field
+        # The schema sanitizes PDF field names (spaces→underscores, etc.)
+        # We need to try multiple variants to match the original PDF field name
         field_id_stripped = field_id.removeprefix("f_").removeprefix("field_")
+        # Also try reversing sanitization: underscores back to spaces
+        field_id_unsanitized = field_id_stripped.replace("_", " ")
 
         # Find field in PDF
         field_obj = None
@@ -102,9 +116,17 @@ def _write_pdf_sync_hybrid(
             for field in pdf.Root.AcroForm.Fields:
                 if isinstance(field, pikepdf.Dictionary) and "/T" in field:
                     field_name = str(field["/T"])
-                    if (field_name == field_id or field_name == field_id_stripped or
+                    # Try multiple matching strategies:
+                    # 1. Exact match with original ID
+                    # 2. Match with stripped ID (no f_ prefix)
+                    # 3. Match with unsanitized ID (underscores → spaces)
+                    # 4. Prefix match (e.g., "1020 Radio Button 1" starts with "1020")
+                    if (field_name == field_id or
+                        field_name == field_id_stripped or
+                        field_name == field_id_unsanitized or
                         field_name.startswith(f"{field_id} ") or
-                        field_name.startswith(f"{field_id_stripped} ")):
+                        field_name.startswith(f"{field_id_stripped} ") or
+                        field_name.startswith(f"{field_id_unsanitized} ")):
                         field_obj = field
                         break
 
